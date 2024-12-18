@@ -490,6 +490,7 @@ def evaluate(
 
     ### Run LM on inputs, get all outputs ###
     # execute each type of request
+    start_time = time.time()
     for reqtype, reqs in requests.items():
         eval_logger.info(f"Running {reqtype} requests")
         # create `K` copies of each request `req` based off `K = req.repeats`
@@ -502,6 +503,8 @@ def evaluate(
                 cloned_reqs.extend([req] * req.repeats)
 
         # run requests through model
+        # print("lm", type(lm))
+        # print("reqtype", reqtype)
         resps = getattr(lm, reqtype)(cloned_reqs)
 
         # put responses from model into a list of length K for each request.
@@ -510,6 +513,8 @@ def evaluate(
 
         if lm.world_size > 1:
             lm.accelerator.wait_for_everyone()
+    end_time = time.time()
+    print(f"Time taken for requests: {end_time - start_time} seconds")
 
     RANK = lm.rank
     WORLD_SIZE = lm.world_size
